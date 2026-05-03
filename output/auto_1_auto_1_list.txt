@@ -1,0 +1,8 @@
+file 'assets/auto/s1/fb_0.mp4'
+file 'assets/auto/s1/fb_1.mp4'
+file 'assets/auto/s1/fb_2.mp4'
+file 'assets/auto/s1/fb_3.mp4'
+file 'assets/auto/s1/fb_4.mp4'
+file 'assets/auto/s1/fb_5.mp4'
+file 'assets/auto/s1/fb_6.mp4'
+file 'assets/auto/s1/fb_7.mp4'
