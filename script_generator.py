@@ -43,7 +43,7 @@ Structure:
 - FACT 3 (22-32s): Wow moment
 - FACT 4 (32-42s): Even more shocking
 - CLIMAX (42-50s): SABSE BADA FACT - is ke liye log ruke the
-- CTA (50-55s): "Like karo agar ye nahi pata tha! Comment mein batao!"
+- CTA (50-55s): "Like karo, comment mein batao, aur subscribe zarur karo!"
 
 Voice rules:
 - Max 8 words per sentence
@@ -51,6 +51,7 @@ Voice rules:
 - Power words: "shocking", "secret", "sach", "pehli baar", "hairan"
 - Roman Hindi ONLY - no Devanagari
 - 140-160 words total
+- LAST LINE MUST BE: "Like karo, comment karo, aur subscribe zarur karo!"
 """,
 
     "story": """

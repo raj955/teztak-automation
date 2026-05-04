@@ -22,52 +22,51 @@ Path(OUTPUT_DIR).mkdir(exist_ok=True)
 # ══════════════════════════════════════════
 
 def make_shayari_voice(text, out_path, mood="romantic"):
-    """Shayari ke liye perfect emotional voice"""
-    
-    # Clean only special chars - keep pauses
+    """A1 Shayari Voice - ElevenLabs first, then fallback"""
+    # Clean text
     text = re.sub(r'[^\w\s.,!?\n]', '', text)
     text = re.sub(r' +', ' ', text).strip()
     if not text:
         return False
 
-    # Mood ke hisab se voice
-    settings = {
-        "romantic":           ("hi-IN-MadhurNeural", "-15%", "+10%"),  # Deep male slow
-        "emotional":          ("hi-IN-MadhurNeural", "-18%", "+10%"),  # Deeper slower
-        "sad":                ("hi-IN-MadhurNeural", "-15%", "+8%"),
-        "classical_romantic": ("hi-IN-MadhurNeural", "-12%", "+10%"),
-        "classical_sad":      ("hi-IN-MadhurNeural", "-15%", "+8%"),
-        "philosophical":      ("hi-IN-MadhurNeural", "-10%", "+12%"),
-        "motivational":       ("hi-IN-MadhurNeural", "-5%",  "+15%"),
-        "poetic":             ("hi-IN-SwaraNeural",  "-12%", "+8%"),
-        "intense":            ("hi-IN-MadhurNeural", "-8%",  "+15%"),
-        "melancholic":        ("hi-IN-MadhurNeural", "-18%", "+8%"),
-    }
-    
-    voice, rate, volume = settings.get(mood, ("hi-IN-MadhurNeural", "-12%", "+10%"))
+    # 1. ElevenLabs - PEHLE TRY KARO
+    try:
+        from elevenlabs_voice import make_complete_audio
+        fmt = f"shayari_{mood}" if mood in ["sad", "romantic", "motivational", "emotional"] else "shayari_romantic"
+        print(f"  🎙️ ElevenLabs ({mood})...")
+        if make_complete_audio(text, out_path, fmt=fmt, mood=mood, add_music=True):
+            if os.path.exists(out_path) and os.path.getsize(out_path) > 1000:
+                print(f"  ✅ ElevenLabs voice ready!")
+                return True
+    except Exception as e:
+        print(f"  ⚠️ ElevenLabs: {e}")
 
+    # 2. Edge TTS fallback
     try:
         import asyncio, edge_tts
+        rate_map = {"sad": "-15%", "emotional": "-18%", "romantic": "-12%",
+                    "motivational": "-5%", "poetic": "-10%", "philosophical": "-8%"}
+        rate = rate_map.get(mood, "-12%")
         async def run():
-            c = edge_tts.Communicate(text, voice, rate=rate, volume=volume)
+            c = edge_tts.Communicate(text, "hi-IN-MadhurNeural", rate=rate, volume="+10%")
             await c.save(out_path)
         asyncio.run(run())
         if os.path.exists(out_path) and os.path.getsize(out_path) > 2000:
-            print(f"  ✅ Voice: {voice} (rate={rate})")
+            print(f"  ✅ Voice: Edge TTS")
             return True
-    except Exception as e:
+    except:
         pass
 
-    # gTTS slow fallback
+    # 3. gTTS fallback
     try:
         from gtts import gTTS
         tts = gTTS(text=text, lang='hi', slow=True)
         tts.save(out_path)
         if os.path.exists(out_path):
-            print("  ✅ Voice: gTTS slow")
+            print("  ✅ Voice: gTTS")
             return True
     except Exception as e:
-        print(f"  ❌ Voice: {e}")
+        print(f"  ❌ Voice failed: {e}")
     return False
 
 
@@ -333,9 +332,13 @@ def create_shayari_video(shayari_data=None, theme=None, video_index=0):
     print(f"{'='*55}")
     print(f"\n📜 Shayari:\n{full_shayari}\n")
 
+    # CTA full script mein add karo - voice mein bhi bolega
+    cta = "Like karo, comment mein batao kaisi lagi, aur subscribe zarur karo!"
+    full_shayari_with_cta = full_shayari.strip() + "\n" + cta
+
     # 1. Voice
     print("🎤 Voice generate ho rahi hai...")
-    if not make_shayari_voice(full_shayari, audio_path, mood):
+    if not make_shayari_voice(full_shayari_with_cta, audio_path, mood):
         return None
     duration = get_duration(audio_path)
     print(f"  Duration: {duration:.1f}s")
@@ -343,6 +346,9 @@ def create_shayari_video(shayari_data=None, theme=None, video_index=0):
     # 2. Scenes - har line alag scene
     if not lines:
         lines = [l.strip() for l in full_shayari.split('\n') if l.strip()]
+    
+    # CTA last mein add karo
+    lines.append("Like karo, comment mein batao kaisi lagi, aur subscribe zarur karo!")
 
     scene_dur = duration / max(len(lines), 1)
     has_pexels = bool(PEXELS_KEY and PEXELS_KEY != "your_pexels_api_key_here")
