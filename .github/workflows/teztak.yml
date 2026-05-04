@@ -114,3 +114,17 @@ jobs:
             output/
             logs/
           retention-days: 3
+
+  keepalive:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Keep repo active
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          echo "Last run: $(date)" >> .github/last_run.txt
+          git add .github/last_run.txt
+          git diff --staged --quiet || git commit -m "Auto: keep alive $(date '+%Y-%m-%d')"
+          git push || true
