@@ -99,36 +99,8 @@ def upload_to_instagram(video_path, title, description, hashtags):
     caption = f"{title}\n\n{description}\n\n{hashtag_text}\n\n#Reels"
 
     try:
-        # Step 1: Pehle video Facebook pe upload karo (public URL ke liye)
-        print("  📤 Facebook pe temporarily upload ho rahi hai...")
-        fb_url = f"https://graph.facebook.com/v18.0/{FACEBOOK_PAGE_ID}/videos"
-        
-        with open(video_path, "rb") as vf:
-            fb_r = requests.post(
-                fb_url,
-                data={
-                    "published": "true",
-                    "access_token": FACEBOOK_ACCESS_TOKEN,
-                    "description": caption[:2000],
-                },
-                files={"source": vf},
-                timeout=300
-            )
-        
-        fb_data = fb_r.json()
-        if "id" not in fb_data:
-            print(f"  ❌ Facebook upload error: {fb_data}")
-            return None
-        
-        fb_video_id = fb_data["id"]
-        print(f"  ✅ Facebook video ID: {fb_video_id}")
-        
-        # Step 2: Facebook video URL se Instagram container banao
-        video_url = f"https://www.facebook.com/video/upload/v2.0/{fb_video_id}"
-        
-        # Actually - seedha file size se resumable karo
+        # Seedha Instagram resumable upload - Facebook pe alag post nahi
         file_size = os.path.getsize(video_path)
-        
         print("  📦 Instagram container ban raha hai...")
         init_r = requests.post(
             f"https://graph.facebook.com/v18.0/{ig_id}/media",
