@@ -63,14 +63,18 @@ jobs:
           MIN=$(TZ='Asia/Kolkata' date +%M)
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "mode=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
-          elif [ "$HOUR" -eq 19 ] && [ "$MIN" -lt 15 ]; then
-            echo "mode=news" >> $GITHUB_OUTPUT
-          elif [ "$HOUR" -ge 19 ]; then
+          elif [ "$HOUR" -ge 19 ] && [ "$HOUR" -lt 20 ] && [ "$MIN" -ge 15 ]; then
+            # 7:15 PM se 8 PM = shayari
+            echo "mode=shayari" >> $GITHUB_OUTPUT
+          elif [ "$HOUR" -ge 20 ]; then
+            # 8 PM ke baad = shayari
             echo "mode=shayari" >> $GITHUB_OUTPUT
           else
+            # Baki sab = news (7AM, 1PM, 7PM, 7:30PM)
             echo "mode=news" >> $GITHUB_OUTPUT
           fi
-          echo "mode set"
+          IST_TIME=$(TZ='Asia/Kolkata' date '+%H:%M')
+          echo "IST time: $IST_TIME, mode set"
 
       - name: Run Shayari
         if: steps.detect.outputs.mode == 'shayari'
