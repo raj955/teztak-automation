@@ -5,12 +5,22 @@ Retry logic + fallback models ke saath Gemini client
 
 import time
 import os
-from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+# Import with fallback
+try:
+    from google import genai
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+except ImportError:
+    try:
+        import google.generativeai as genai_legacy
+        genai = None
+        client = None
+    except ImportError:
+        genai = None
+        client = None
 
 # Models priority order - pehla fail ho toh agla try karo
 MODELS = [
