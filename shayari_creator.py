@@ -188,14 +188,22 @@ def make_shayari_scene(img_path, line_text, duration, out_path, idx=0, mood="rom
         txt_vf = ""
 
     if img_path and os.path.exists(img_path):
-        # Very slow cinematic motion - shayari feel
+        # Cinematic motion - 6 types for variety
         motions = [
-            f"zoompan=z='min(zoom+0.0003,1.06)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s=1080x1920",
-            f"zoompan=z='if(lte(zoom,1.0),1.05,max(1.001,zoom-0.0003))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s=1080x1920",
-            f"zoompan=z='1.05':x='iw/2-(iw/zoom/2)':y='if(lte(on,1),ih-ih/zoom,max(0,y-0.2))':d={frames}:s=1080x1920",
-            f"zoompan=z='1.05':x='if(lte(on,1),0,min(x+0.2,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d={frames}:s=1080x1920",
+            # Slow zoom in center
+            f"zoompan=z='min(zoom+0.0008,1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s=1080x1920",
+            # Slow zoom out
+            f"zoompan=z='if(lte(zoom,1.0),1.12,max(1.001,zoom-0.0008))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s=1080x1920",
+            # Pan left to right
+            f"zoompan=z='1.10':x='if(lte(on,1),0,min(x+0.5,iw-iw/zoom))':y='ih/2-(ih/zoom/2)':d={frames}:s=1080x1920",
+            # Pan right to left
+            f"zoompan=z='1.10':x='if(lte(on,1),iw-iw/zoom,max(0,x-0.5))':y='ih/2-(ih/zoom/2)':d={frames}:s=1080x1920",
+            # Pan top to bottom
+            f"zoompan=z='1.10':x='iw/2-(iw/zoom/2)':y='if(lte(on,1),0,min(y+0.4,ih-ih/zoom))':d={frames}:s=1080x1920",
+            # Diagonal zoom
+            f"zoompan=z='min(zoom+0.0006,1.12)':x='if(lte(on,1),0,min(x+0.3,iw-iw/zoom))':y='if(lte(on,1),0,min(y+0.2,ih-ih/zoom))':d={frames}:s=1080x1920",
         ]
-        motion = motions[idx % 4]
+        motion = motions[idx % 6]
 
         vf = (
             f"scale=1920:1920:force_original_aspect_ratio=increase,"
@@ -402,24 +410,54 @@ def create_shayari_video(shayari_data=None, theme=None, video_index=0):
 
 
 def create_shayari_batch(themes=None, count=3):
-    """Multiple shayari videos banao"""
-    from shayari_database import SHAYARI_COLLECTION, get_shayari_by_theme
+    """Multiple shayari videos banao - AI + Database, no duplicates"""
+    from shayari_database import SHAYARI_COLLECTION, get_shayari_by_theme, generate_ai_shayari, SHAYAR_STYLES, THEME_MOODS
+    import json as _json
+    from pathlib import Path as _Path
 
-    # Select shayari entries
-    if themes:
-        pool = []
-        for t in themes:
-            pool.extend(get_shayari_by_theme(t))
-    else:
-        pool = SHAYARI_COLLECTION.copy()
+    _Path("logs").mkdir(exist_ok=True)
+    used_file = "logs/used_shayari.json"
 
-    random.shuffle(pool)
-    selected = pool[:count]
+    try:
+        used = _json.load(open(used_file, encoding='utf-8'))
+    except:
+        used = []
 
     created = []
-    for i, shayari_data in enumerate(selected):
+    shayars = list(SHAYAR_STYLES.keys())
+    theme_list = list(THEME_MOODS.keys())
+
+    for i in range(count):
+        shayari_data = None
+
+        # 50% chance AI shayari, 50% database
+        use_ai = (i % 2 == 0)
+
+        if use_ai:
+            # AI se fresh unique shayari
+            t = theme_list[i % len(theme_list)] if not themes else themes[i % len(themes)]
+            s = shayars[i % len(shayars)]
+            s = shayars[i % len(shayars)]
+            print(f"AI shayari: {s} - {t}")
+            shayari_data = generate_ai_shayari(shayar=s, theme=t)
+
+        if not shayari_data:
+            # Database se unused shayari
+            pool = SHAYARI_COLLECTION.copy()
+            unused = [s for s in pool if f"{s['shayar']}_{s['theme']}" not in used]
+            if not unused:
+                print("♻️ Reset - sab use ho gayi")
+                used = []
+                _json.dump([], open(used_file, 'w', encoding='utf-8'), ensure_ascii=False)
+                unused = pool.copy()
+            random.shuffle(unused)
+            shayari_data = unused[0]
+
         result = create_shayari_video(shayari_data=shayari_data, video_index=i)
         if result:
+            key = f"{shayari_data['shayar']}_{shayari_data['theme']}_{i}"
+            used.append(key)
+            _json.dump(used, open(used_file, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
             created.append(result)
         time.sleep(2)
 
