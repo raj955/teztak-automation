@@ -124,7 +124,7 @@ def run_news():
 
 
 def upload(video_info):
-    """YouTube + Facebook upload"""
+    """YouTube + Facebook + Instagram upload"""
 
     # YouTube
     try:
@@ -148,6 +148,18 @@ def upload(video_info):
         )
     except Exception as e:
         print(f"⚠️ Facebook: {e}")
+
+    # Instagram
+    try:
+        from social_uploader import upload_to_instagram
+        upload_to_instagram(
+            video_info['path'],
+            video_info['title'],
+            video_info.get('description', ''),
+            video_info.get('hashtags', [])
+        )
+    except Exception as e:
+        print(f"⚠️ Instagram: {e}")
 
 
 if __name__ == "__main__":
