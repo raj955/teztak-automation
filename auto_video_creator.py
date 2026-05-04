@@ -93,50 +93,46 @@ def convert_number(n):
 
 
 def make_voice(text, out_path, fmt="facts"):
-    """Crystal clear Hindi voice"""
+    """A1 Voice: ElevenLabs → Edge TTS → gTTS"""
     
-    # Step 1: Pronunciation fix
+    # Pronunciation fix
     fixed_text = fix_pronunciation(text)
-    
-    # Clean text
     fixed_text = re.sub(r'#\w+', '', fixed_text)
     fixed_text = re.sub(r'[^\w\s.,!?]', '', fixed_text)
     fixed_text = re.sub(r'\s+', ' ', fixed_text).strip()
-    
     if not fixed_text:
         return False
-    
-    # Format ke hisab se voice speed
-    rate_map = {
-        "facts":          "+8%",
-        "story":          "-5%",   # Slower - dramatic
-        "roast":          "+15%",  # Faster - energetic
-        "countdown":      "+10%",
-        "news_breakdown": "+5%",
-    }
-    rate = rate_map.get(fmt, "+8%")
-    
+
+    # 1. ElevenLabs - BEST QUALITY
+    try:
+        from elevenlabs_voice import make_complete_audio
+        print(f"  🎙️ ElevenLabs ({fmt})...")
+        if make_complete_audio(fixed_text, out_path, fmt=fmt, add_music=True):
+            if os.path.exists(out_path) and os.path.getsize(out_path) > 1000:
+                print(f"  ✅ ElevenLabs voice ready!")
+                return True
+    except Exception as e:
+        print(f"  ⚠️ ElevenLabs: {e}")
+
+    # 2. Edge TTS fallback
     try:
         import asyncio, edge_tts
-        
+        rate_map = {
+            "facts": "+8%", "story": "-5%", "roast": "+15%",
+            "countdown": "+10%", "news_breakdown": "+5%",
+        }
+        rate = rate_map.get(fmt, "+8%")
         async def run():
-            c = edge_tts.Communicate(
-                fixed_text,
-                "hi-IN-SwaraNeural",
-                rate=rate,
-                volume="+20%"
-            )
+            c = edge_tts.Communicate(fixed_text, "hi-IN-SwaraNeural", rate=rate, volume="+15%")
             await c.save(out_path)
-        
         asyncio.run(run())
-        
         if os.path.exists(out_path) and os.path.getsize(out_path) > 2000:
-            print(f"  ✅ Voice: SwaraNeural (rate={rate})")
+            print(f"  ✅ Voice: Edge TTS")
             return True
     except Exception as e:
-        pass
-    
-    # gTTS fallback with fixed text
+        print(f"  ⚠️ Edge TTS: {e}")
+
+    # 3. gTTS fallback
     try:
         from gtts import gTTS
         tts = gTTS(text=fixed_text, lang='hi', slow=False)
@@ -145,7 +141,7 @@ def make_voice(text, out_path, fmt="facts"):
             print("  ✅ Voice: gTTS")
             return True
     except Exception as e:
-        print(f"  ❌ Voice: {e}")
+        print(f"  ❌ Voice failed: {e}")
     return False
 
 
