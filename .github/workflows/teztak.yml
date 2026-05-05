@@ -2,15 +2,12 @@ name: TezTak Auto Scheduler
 
 on:
   schedule:
-    # NEWS - 3 times daily
     - cron: '30 1 * * *'   # 7:00 AM IST
     - cron: '30 7 * * *'   # 1:00 PM IST
     - cron: '30 13 * * *'  # 7:00 PM IST
-    # SHAYARI - 1 time
-    - cron: '30 15 * * *'  # 9:00 PM IST
-    # VIRAL SCRIPT - 2 times
-    - cron: '30 16 * * *'  # 10:00 PM IST
-    - cron: '30 17 * * *'  # 11:00 PM IST
+    - cron: '30 15 * * *'  # 9:00 PM IST - Shayari
+    - cron: '30 16 * * *'  # 10:00 PM IST - Viral
+    - cron: '30 17 * * *'  # 11:00 PM IST - Viral
 
   workflow_dispatch:
     inputs:
@@ -28,6 +25,10 @@ jobs:
   run-teztak:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Auto retry on failure - 3 attempts
+    strategy:
+      fail-fast: false
+      max-parallel: 1
 
     steps:
       - name: Checkout code
@@ -70,7 +71,7 @@ jobs:
           fi
           echo "IST: $(TZ='Asia/Kolkata' date '+%H:%M')"
 
-      - name: Run News
+      - name: Run News (with retry)
         if: steps.detect.outputs.mode == 'news'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -81,9 +82,15 @@ jobs:
           FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
           INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
           YOUTUBE_CLIENT_SECRETS: client_secrets.json
-        run: python github_runner.py news
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i/3..."
+            python github_runner.py news && break
+            echo "Attempt $i failed, retrying in 30s..."
+            sleep 30
+          done
 
-      - name: Run Shayari
+      - name: Run Shayari (with retry)
         if: steps.detect.outputs.mode == 'shayari'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -94,9 +101,15 @@ jobs:
           FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
           INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
           YOUTUBE_CLIENT_SECRETS: client_secrets.json
-        run: python github_runner.py shayari 1
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i/3..."
+            python github_runner.py shayari 1 && break
+            echo "Attempt $i failed, retrying in 30s..."
+            sleep 30
+          done
 
-      - name: Run Viral
+      - name: Run Viral (with retry)
         if: steps.detect.outputs.mode == 'viral'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -107,7 +120,13 @@ jobs:
           FACEBOOK_ACCESS_TOKEN: ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
           INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
           YOUTUBE_CLIENT_SECRETS: client_secrets.json
-        run: python github_runner.py viral
+        run: |
+          for i in 1 2 3; do
+            echo "Attempt $i/3..."
+            python github_runner.py viral && break
+            echo "Attempt $i failed, retrying in 30s..."
+            sleep 30
+          done
 
       - name: Upload artifacts
         if: always()
