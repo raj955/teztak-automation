@@ -205,15 +205,22 @@ Duration: {duration:.0f}s
 OUTPUT 6-8 scenes. JSON only:
 {{"scenes":[{{
   "text": "roman hindi max 8 words",
-  "visual_query": "specific 2-4 english words for pexels",
-  "ai_image_prompt": "detailed cinematic description for AI image generation",
+  "visual_query": "specific 2-4 english words for pexels - MUST BE INDIA RELATED",
+  "ai_image_prompt": "detailed cinematic India-specific scene description",
   "duration": {per_scene}
 }}]}}
 
-Rules:
-- visual_query: specific topic words (MS Dhoni batting, india flood rescue)
-- ai_image_prompt: detailed scene description (Indian mother praying in dim light, diya lamp, emotional, cinematic)
-- NEVER: subscribe, anchor, studio, logo"""
+CRITICAL RULES for visual_query:
+- ALWAYS add "india" or "indian" in query
+- Topic specific: "MS Dhoni IPL cricket", "india parliament building", "mumbai city crowd"
+- NEVER use other countries unless script is about them
+- NEVER: subscribe, anchor, studio, logo, western city
+
+CRITICAL RULES for ai_image_prompt:
+- Always Indian setting, Indian people, Indian locations
+- Example: "Indian cricket fan celebrating, Mumbai stadium, colorful crowd"
+- Example: "Indian mother praying at diya lamp, traditional home, warm light"
+- Must match EXACTLY what script is saying in that scene"""
 
     try:
         resp = generate(prompt)

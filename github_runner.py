@@ -162,6 +162,52 @@ def upload(video_info):
         print(f"⚠️ Instagram: {e}")
 
 
+def run_viral():
+    """Viral facts/story/countdown video - 10PM 11PM pe"""
+    print("\n🔥 GitHub Viral Job")
+    fix_font_for_linux()
+
+    from trend_researcher import research_todays_viral_topics
+    from script_generator import generate_viral_script
+    from auto_video_creator import create_auto_video
+    import random
+
+    # Viral formats - raat ke liye best
+    viral_formats = ["facts", "story", "countdown", "roast"]
+    fmt = random.choice(viral_formats)
+
+    topics = research_todays_viral_topics()
+    if not topics:
+        print("❌ Topics nahi mile")
+        sys.exit(1)
+
+    topic = topics[0]
+    topic["script_index"] = 0
+    print(f"Topic: {topic.get('short_title', topic.get('title', ''))[:50]}")
+
+    script = generate_viral_script(topic, forced_format=fmt)
+    if not script:
+        print("❌ Script nahi bani")
+        sys.exit(1)
+
+    print(f"✅ [{fmt.upper()}] {script.get('title', '')[:50]}")
+
+    path = create_auto_video(script, video_index=0)
+    if not path:
+        print("❌ Video nahi bani")
+        sys.exit(1)
+
+    video_info = {
+        "path": path,
+        "title": script.get("title", ""),
+        "description": script.get("description", ""),
+        "hashtags": script.get("hashtags", [])
+    }
+
+    upload(video_info)
+    print("✅ Viral job complete!")
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "shayari"
 
