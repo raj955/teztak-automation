@@ -162,6 +162,44 @@ def upload(video_info):
         print(f"⚠️ Instagram: {e}")
 
 
+def run_wisdom():
+    """Osho/Spiritual wisdom video - roz 1"""
+    print("\n🙏 GitHub Wisdom Job")
+    fix_font_for_linux()
+
+    from osho_creator import create_wisdom_video, WISDOM_TOPICS
+    import random
+
+    # Used topics track
+    used_file = "logs/used_wisdom.json"
+    try:
+        used = json.load(open(used_file, encoding='utf-8'))
+    except:
+        used = []
+
+    # Unused topics
+    unused = [t for t in WISDOM_TOPICS if f"{t[0]}_{t[1]}" not in used]
+    if not unused:
+        used = []
+        json.dump([], open(used_file, 'w'), ensure_ascii=False)
+        unused = WISDOM_TOPICS.copy()
+
+    t = random.choice(unused)
+    topic_type, topic, mood = t
+    print(f"Topic: {topic_type} - {topic}")
+
+    result = create_wisdom_video(topic_type=topic_type, topic=topic, mood=mood, video_index=1)
+
+    if result:
+        used.append(f"{topic_type}_{topic}")
+        json.dump(used, open(used_file, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+        upload(result)
+        print("✅ Wisdom job complete!")
+    else:
+        print("❌ Video nahi bani")
+        sys.exit(1)
+
+
 def run_viral():
     """Viral facts/story/countdown video - 10PM 11PM pe"""
     print("\n🔥 GitHub Viral Job")
