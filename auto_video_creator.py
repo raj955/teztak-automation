@@ -496,6 +496,28 @@ def create_all_auto_videos(scripts):
     return created
 
 
+# ══════════════════════════════════════════
+# SYNC PIPELINE HOOK  (narration <-> visuals match)
+# Pehle sync_video_creator try hota hai; fail ho to purana pipeline chalta hai.
+# Band karna ho: env SYNC_MODE=0
+# ══════════════════════════════════════════
+
+_orig_create_auto_video = create_auto_video
+
+
+def create_auto_video(script_data, video_index=0):
+    if os.getenv("SYNC_MODE", "1") == "1":
+        try:
+            from sync_video_creator import create_synced_video
+            path = create_synced_video(script_data, video_index)
+            if path:
+                return path
+            print("⚠️ Sync pipeline fail hui -> purana pipeline use ho raha hai")
+        except Exception as e:
+            print(f"⚠️ Sync pipeline error ({str(e)[:80]}) -> purana pipeline")
+    return _orig_create_auto_video(script_data, video_index)
+
+
 if __name__ == "__main__":
     test = {
         "title": "Dhoni 2011 World Cup Story",

@@ -254,6 +254,10 @@ if __name__ == "__main__":
         run_shayari(count)
     elif mode == "news":
         run_news()
+    elif mode == "wisdom":
+        run_wisdom()
+    elif mode == "viral":
+        run_viral()
     else:
         print(f"Unknown mode: {mode}")
         sys.exit(1)

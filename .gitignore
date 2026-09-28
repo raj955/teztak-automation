@@ -1,0 +1,18 @@
+# Secrets - KABHI commit mat karo
+.env
+client_secrets.json
+*.pkl
+token*.json
+
+# Generated files
+assets/
+output/
+logs/
+__pycache__/
+*.mp3
+*.mp4
+heygen_ready/
+
+# Royalty-free background music yahan rakho (repo mein commit hoga)
+!music/
+!music/*.mp3
