@@ -200,6 +200,23 @@ def run_wisdom():
         sys.exit(1)
 
 
+def run_quotes():
+    """Motivational quotes video - curated bank se, roz 1"""
+    print("\n💬 GitHub Quotes Job")
+    fix_font_for_linux()
+
+    from quotes_creator import create_quote_video
+
+    result = create_quote_video(video_index=2)
+
+    if result:
+        upload(result)
+        print("✅ Quotes job complete!")
+    else:
+        print("❌ Video nahi bani")
+        sys.exit(1)
+
+
 def run_viral():
     """Viral facts/story/countdown video - 10PM 11PM pe"""
     print("\n🔥 GitHub Viral Job")
@@ -258,6 +275,8 @@ if __name__ == "__main__":
         run_wisdom()
     elif mode == "viral":
         run_viral()
+    elif mode == "quotes":
+        run_quotes()
     else:
         print(f"Unknown mode: {mode}")
         sys.exit(1)
